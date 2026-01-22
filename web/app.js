@@ -1,55 +1,66 @@
 const chat = document.getElementById("chat");
-const input = document.getElementById("messageInput");
-const btn = document.getElementById("sendBtn");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
 
 let busy = false;
 
-function addMessage(text, cls) {
+function addMessage(text, type) {
   const div = document.createElement("div");
-  div.className = `message ${cls}`;
+  div.className = `message ${type}`;
   div.textContent = text;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return div;
 }
 
-async function send() {
+function typeEffect(el, text, speed = 15) {
+  el.textContent = "";
+  let i = 0;
+  const interval = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    chat.scrollTop = chat.scrollHeight;
+    if (i >= text.length) clearInterval(interval);
+  }, speed);
+}
+
+async function sendMessage() {
   if (busy) return;
   const text = input.value.trim();
   if (!text) return;
 
   busy = true;
+  input.value = "";
   input.disabled = true;
-  btn.disabled = true;
+  send.disabled = true;
 
   addMessage(text, "user");
-  input.value = "";
+  const aiBubble = addMessage("...", "ai");
 
-  const aiDiv = addMessage("", "ai");
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: text})
+    });
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({message: text})
-  });
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    aiDiv.textContent += decoder.decode(value);
-    chat.scrollTop = chat.scrollHeight;
+    const data = await res.json();
+    if (data.reply) {
+      typeEffect(aiBubble, data.reply);
+    } else {
+      aiBubble.textContent = "Erreur IA.";
+    }
+  } catch {
+    aiBubble.textContent = "Erreur serveur.";
   }
 
   busy = false;
   input.disabled = false;
-  btn.disabled = false;
+  send.disabled = false;
   input.focus();
 }
 
-btn.onclick = send;
+send.onclick = sendMessage;
 input.addEventListener("keydown", e => {
-  if (e.key === "Enter") send();
+  if (e.key === "Enter") sendMessage();
 });

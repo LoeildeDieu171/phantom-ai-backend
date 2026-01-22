@@ -1,104 +1,37 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
-import openai
 import os
-import time
-import json
-
-# ==============================
-# CONFIG
-# ==============================
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-if not OPENAI_API_KEY:
-    raise RuntimeError("OPENAI_API_KEY missing")
-
-openai.api_key = OPENAI_API_KEY
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from ai.openai_client import stream_chat
+from security.validation import validate_message
 
 app = FastAPI()
-
-# ==============================
-# CORS (frontend web / mobile)
-# ==============================
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ==============================
-# UTIL
-# ==============================
-
-def stream_text(text: str, delay: float = 0.02):
-    for char in text:
-        yield char
-        time.sleep(delay)
-
-# ==============================
-# ROUTES
-# ==============================
-
-@app.get("/")
-def home():
+@app.get("/api/health")
+def health():
     return {
         "name": "Phantom AI",
         "status": "online",
         "message": "Backend is running"
     }
 
-@app.post("/chat")
+@app.post("/api/chat")
 async def chat(request: Request):
-    try:
-        data = await request.json()
-        user_message = data.get("message", "").strip()
+    body = await request.json()
+    message = body.get("message", "")
 
-        if not user_message:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Message vide"}
-            )
+    validate_message(message)
 
-        # ==============================
-        # OPENAI REQUEST
-        # ==============================
+    def generator():
+        for chunk in stream_chat(message):
+            yield chunk
 
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Tu es Phantom AI, une vraie IA intelligente, "
-                        "naturelle, variée, jamais répétitive, "
-                        "tu réponds comme ChatGPT."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            temperature=0.9,
-            max_tokens=500
-        )
-
-        ai_text = completion.choices[0].message.content
-
-        return StreamingResponse(
-            stream_text(ai_text),
-            media_type="text/plain"
-        )
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Erreur serveur",
-                "details": str(e)
-            }
-        )
+    return StreamingResponse(generator(), media_type="text/plain")

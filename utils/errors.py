@@ -1,0 +1,2 @@
+class PhantomError(Exception):
+    pass

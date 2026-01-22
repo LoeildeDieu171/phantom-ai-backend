@@ -1,12 +1,12 @@
 * {
   box-sizing: border-box;
+  font-family: Inter, system-ui, sans-serif;
 }
 
 body {
   margin: 0;
   background: #0f0f14;
-  font-family: Arial, sans-serif;
-  color: white;
+  color: #e5e7eb;
 }
 
 #app {
@@ -16,55 +16,61 @@ body {
 }
 
 header {
-  padding: 15px;
-  background: #181825;
-  font-weight: bold;
+  padding: 16px;
+  background: #111827;
   text-align: center;
+  font-weight: bold;
 }
 
-#chat {
+main {
   flex: 1;
-  padding: 15px;
+  padding: 16px;
   overflow-y: auto;
 }
 
 .message {
-  margin-bottom: 12px;
   max-width: 80%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  line-height: 1.4;
 }
 
 .user {
+  background: #2563eb;
   align-self: flex-end;
-  background: #3b82f6;
-  padding: 10px;
-  border-radius: 10px;
 }
 
 .ai {
-  align-self: flex-start;
   background: #1f2937;
-  padding: 10px;
-  border-radius: 10px;
+  align-self: flex-start;
 }
 
-#inputBar {
+footer {
   display: flex;
-  padding: 10px;
-  background: #181825;
+  gap: 8px;
+  padding: 12px;
+  background: #111827;
 }
 
-#messageInput {
+input {
   flex: 1;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
 }
 
-#sendBtn {
-  margin-left: 10px;
-  padding: 10px 15px;
-  background: #22c55e;
+button {
+  padding: 12px 16px;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
+  background: #22c55e;
+  font-weight: bold;
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .message {
+    max-width: 95%;
+  }
 }

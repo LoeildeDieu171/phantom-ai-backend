@@ -1,13 +1,12 @@
 * {
   box-sizing: border-box;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
 
 body {
   margin: 0;
-  background: #0f1117;
-  color: #e6e6e6;
-  height: 100vh;
+  background: #0f0f14;
+  font-family: Arial, sans-serif;
+  color: white;
 }
 
 #app {
@@ -16,106 +15,56 @@ body {
   height: 100vh;
 }
 
-/* HEADER */
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 18px;
-  background: #171a21;
-  border-bottom: 1px solid #23262e;
-}
-
-.logo {
+  padding: 15px;
+  background: #181825;
   font-weight: bold;
-  font-size: 18px;
+  text-align: center;
 }
 
-.status {
-  font-size: 14px;
-}
-
-.online {
-  color: #00ff9c;
-}
-
-/* CHAT */
 #chat {
   flex: 1;
-  padding: 16px;
+  padding: 15px;
   overflow-y: auto;
 }
 
 .message {
-  max-width: 85%;
-  padding: 12px 14px;
   margin-bottom: 12px;
-  border-radius: 12px;
-  line-height: 1.4;
-  animation: fadeIn 0.3s ease;
+  max-width: 80%;
 }
 
 .user {
-  background: #2563eb;
   align-self: flex-end;
+  background: #3b82f6;
+  padding: 10px;
+  border-radius: 10px;
 }
 
 .ai {
-  background: #1f2937;
   align-self: flex-start;
+  background: #1f2937;
+  padding: 10px;
+  border-radius: 10px;
 }
 
-/* FOOTER */
-footer {
+#inputBar {
   display: flex;
-  padding: 12px;
-  gap: 10px;
-  border-top: 1px solid #23262e;
-  background: #171a21;
+  padding: 10px;
+  background: #181825;
 }
 
-footer input {
+#messageInput {
   flex: 1;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 6px;
   border: none;
-  outline: none;
-  font-size: 16px;
-  background: #0f1117;
-  color: #fff;
 }
 
-footer button {
-  padding: 0 18px;
-  border-radius: 10px;
+#sendBtn {
+  margin-left: 10px;
+  padding: 10px 15px;
+  background: #22c55e;
   border: none;
-  background: #2563eb;
-  color: white;
-  font-size: 18px;
+  border-radius: 6px;
   cursor: pointer;
-}
-
-footer button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* MOBILE */
-@media (max-width: 600px) {
-  .message {
-    max-width: 95%;
-    font-size: 15px;
-  }
-}
-
-/* ANIMATION */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

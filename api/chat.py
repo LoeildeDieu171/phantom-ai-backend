@@ -1,28 +1,37 @@
-import os
 from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
-from openai import OpenAI
+from fastapi.responses import JSONResponse
+import os
+import openai
 
 app = FastAPI()
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-@app.post("/api/chat")
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+@app.get("/")
+def health():
+    return {"status": "ok", "name": "Phantom AI"}
+
+@app.post("/chat")
 async def chat(req: Request):
     data = await req.json()
-    prompt = data.get("message", "")
+    message = data.get("message", "").strip()
 
-    def stream():
-        response = client.chat.completions.create(
+    if not message:
+        return JSONResponse({"error": "Empty message"}, status_code=400)
+
+    try:
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Tu es Phantom AI, une vraie IA intelligente."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": "Tu es Phantom AI, une IA stylée, claire, utile."},
+                {"role": "user", "content": message}
             ],
-            stream=True
+            temperature=0.8
         )
 
-        for chunk in response:
-            if chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+        return {
+            "reply": response.choices[0].message.content
+        }
 
-    return StreamingResponse(stream(), media_type="text/plain")
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)

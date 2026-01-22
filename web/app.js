@@ -1,100 +1,55 @@
 const chat = document.getElementById("chat");
 const input = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
+const btn = document.getElementById("sendBtn");
 
-let aiBusy = false;
-let memory = JSON.parse(localStorage.getItem("phantomMemory") || "[]");
+let busy = false;
 
-// =====================
-// UTILS
-// =====================
-
-function addMessage(text, type) {
+function addMessage(text, cls) {
   const div = document.createElement("div");
-  div.className = `message ${type}`;
+  div.className = `message ${cls}`;
   div.textContent = text;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return div;
 }
 
-function saveMemory(role, content) {
-  memory.push({ role, content });
-  memory = memory.slice(-10); // limite mémoire
-  localStorage.setItem("phantomMemory", JSON.stringify(memory));
-}
+async function send() {
+  if (busy) return;
+  const text = input.value.trim();
+  if (!text) return;
 
-// =====================
-// TYPE EFFECT
-// =====================
+  busy = true;
+  input.disabled = true;
+  btn.disabled = true;
 
-async function typeStream(element, response) {
-  const reader = response.body.getReader();
+  addMessage(text, "user");
+  input.value = "";
+
+  const aiDiv = addMessage("", "ai");
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({message: text})
+  });
+
+  const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  element.textContent = "";
 
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-    element.textContent += decoder.decode(value);
+    aiDiv.textContent += decoder.decode(value);
     chat.scrollTop = chat.scrollHeight;
   }
-}
 
-// =====================
-// SEND MESSAGE
-// =====================
-
-async function sendMessage() {
-  if (aiBusy) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  aiBusy = true;
-  input.disabled = true;
-  sendBtn.disabled = true;
-
-  input.value = "";
-
-  addMessage(text, "user");
-  saveMemory("user", text);
-
-  const aiBubble = addMessage("…", "ai");
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: text,
-        memory: memory
-      })
-    });
-
-    if (!res.ok) {
-      aiBubble.textContent = "Erreur serveur.";
-    } else {
-      await typeStream(aiBubble, res);
-      saveMemory("assistant", aiBubble.textContent);
-    }
-
-  } catch {
-    aiBubble.textContent = "Erreur serveur.";
-  }
-
-  aiBusy = false;
+  busy = false;
   input.disabled = false;
-  sendBtn.disabled = false;
+  btn.disabled = false;
   input.focus();
 }
 
-// =====================
-// EVENTS
-// =====================
-
-sendBtn.onclick = sendMessage;
-
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+btn.onclick = send;
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") send();
 });

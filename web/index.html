@@ -1,38 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Phantom AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- HEADER -->
-  <header class="topbar">
-    <div class="brand">Phantom AI</div>
-  </header>
-
-  <!-- CHAT CONTAINER -->
-  <main id="chat-container">
-    <div class="message ai">
-      <div class="bubble">
-        Salut. Je suis <b>Phantom AI</b>.<br>
-        Écris-moi un message.
-      </div>
-    </div>
-  </main>
-
-  <!-- INPUT -->
-  <footer class="input-bar">
-    <textarea
-      id="user-input"
-      placeholder="Écris ton message…"
-      rows="1"
-    ></textarea>
-    <button id="send-btn">➤</button>
-  </footer>
-
+  <h1>Phantom AI</h1>
+  <div id="chat"></div>
+  <input id="input" placeholder="Écris ici..." />
+  <button id="send">Envoyer</button>
   <script src="app.js"></script>
 </body>
 </html>

@@ -17,3 +17,10 @@
     }
   ]
 }
+{
+  "functions": {
+    "api/chat.js": {
+      "runtime": "edge"
+    }
+  }
+}

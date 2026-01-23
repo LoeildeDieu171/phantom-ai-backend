@@ -1,36 +1,30 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import os
-import openai
+export const config = {
+  runtime: "edge"
+};
 
-app = FastAPI()
+export default async function handler(req) {
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
 
-class ChatRequest(BaseModel):
-    message: str
+  const { messages } = await req.json();
 
-@app.get("/api/chat")
-def test():
-    return {"ok": True, "message": "API OK"}
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      stream: true,
+      messages
+    })
+  });
 
-@app.post("/api/chat")
-def chat(req: ChatRequest):
-    if not os.getenv("OPENAI_API_KEY"):
-        return {"error": "OPENAI_API_KEY missing"}
-
-    try:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-
-        res = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Tu es Phantom AI."},
-                {"role": "user", "content": req.message}
-            ]
-        )
-
-        return {
-            "reply": res.choices[0].message.content
-        }
-
-    except Exception as e:
-        return {"error": str(e)}
+  return new Response(response.body, {
+    headers: {
+      "Content-Type": "text/event-stream"
+    }
+  });
+}

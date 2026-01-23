@@ -8,24 +8,31 @@
 </head>
 <body>
 
-<header class="topbar">
-  <span class="title">Phantom AI</span>
-</header>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="brand">🤖 Phantom AI</div>
+  </header>
 
-<main id="chat-container">
-  <div id="chat"></div>
-</main>
+  <!-- CHAT CONTAINER -->
+  <main id="chat-container">
+    <div class="message ai">
+      <div class="bubble">
+        Salut. Je suis <b>Phantom AI</b>.<br>
+        Écris-moi un message.
+      </div>
+    </div>
+  </main>
 
-<footer class="input-area">
-  <input
-    id="messageInput"
-    type="text"
-    placeholder="Écris ton message..."
-    autocomplete="off"
-  />
-  <button id="sendBtn">Envoyer</button>
-</footer>
+  <!-- INPUT -->
+  <footer class="input-bar">
+    <textarea
+      id="user-input"
+      placeholder="Écris ton message…"
+      rows="1"
+    ></textarea>
+    <button id="send-btn">➤</button>
+  </footer>
 
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

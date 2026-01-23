@@ -1,67 +1,30 @@
-const chat = document.getElementById("chat-container");
-const input = document.getElementById("user-input");
-const button = document.getElementById("send-btn");
+const input = document.getElementById("input");
+const chat = document.getElementById("chat");
+const send = document.getElementById("send");
 
-let history = [
-  { role: "system", content: "Tu es Phantom AI, une IA intelligente, claire et utile." }
-];
+send.onclick = async () => {
+  if (!input.value.trim()) return;
 
-function addMessage(role, text = "") {
-  const msg = document.createElement("div");
-  msg.className = `message ${role}`;
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = text;
-
-  msg.appendChild(bubble);
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-
-  return bubble;
-}
-
-async function send() {
-  const text = input.value.trim();
-  if (!text) return;
-
+  const userMsg = input.value;
   input.value = "";
-  button.disabled = true;
 
-  addMessage("user", text);
-  history.push({ role: "user", content: text });
-
-  const bubble = addMessage("ai", "");
+  chat.innerHTML += `<div class="user">${userMsg}</div>`;
+  const aiDiv = document.createElement("div");
+  aiDiv.className = "ai";
+  chat.appendChild(aiDiv);
 
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages: history })
+    body: JSON.stringify({ message: userMsg })
   });
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let full = "";
 
   while (true) {
-    const { done, value } = await reader.read();
+    const { value, done } = await reader.read();
     if (done) break;
-
-    const chunk = decoder.decode(value);
-    full += chunk;
-    bubble.textContent += chunk;
-    chat.scrollTop = chat.scrollHeight;
+    aiDiv.textContent += decoder.decode(value);
   }
-
-  history.push({ role: "assistant", content: full });
-  button.disabled = false;
-}
-
-button.onclick = send;
-
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    send();
-  }
-});
+};

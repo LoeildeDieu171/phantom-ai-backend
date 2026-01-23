@@ -4,42 +4,27 @@ const sendBtn = document.getElementById("sendBtn");
 
 let aiBusy = false;
 
-/* Ajouter message */
 function addMessage(text, type) {
   const div = document.createElement("div");
-  div.classList.add("message", type);
+  div.className = `message ${type}`;
   div.textContent = text;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return div;
 }
 
-/* Effet écriture progressive */
-function typeText(element, text, speed = 22) {
-  element.textContent = "";
+function typeText(el, text, speed = 18) {
+  el.textContent = "";
   let i = 0;
   const interval = setInterval(() => {
-    element.textContent += text[i];
+    el.textContent += text[i];
     i++;
     chat.scrollTop = chat.scrollHeight;
     if (i >= text.length) clearInterval(interval);
   }, speed);
 }
 
-/* Faux cerveau IA (sera remplacé par API OpenAI) */
-function generateAIResponse(userText) {
-  const responses = [
-    "Intéressant. Peux-tu m’en dire plus ?",
-    "Je comprends. Voici ce que je peux te dire.",
-    "Bonne question. Analysons ça ensemble.",
-    "D’accord. Voilà une réponse claire.",
-    "Hmm… réfléchissons intelligemment à ça."
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-/* Envoyer message */
-function sendMessage() {
+async function sendMessage() {
   const text = input.value.trim();
   if (!text || aiBusy) return;
 
@@ -49,29 +34,32 @@ function sendMessage() {
   sendBtn.disabled = true;
 
   addMessage(text, "user");
+  const aiBubble = addMessage("⏳ Phantom AI réfléchit…", "ai");
 
-  const aiBubble = addMessage("", "ai");
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
 
-  setTimeout(() => {
-    const response = generateAIResponse(text);
-    typeText(aiBubble, response);
-  }, 400);
+    const data = await res.json();
+    aiBubble.textContent = "";
+    typeText(aiBubble, data.response || "Erreur IA");
 
-  setTimeout(() => {
-    aiBusy = false;
-    input.disabled = false;
-    sendBtn.disabled = false;
-    input.focus();
-  }, 1800);
+  } catch (err) {
+    aiBubble.textContent = "Erreur serveur.";
+  }
+
+  aiBusy = false;
+  input.disabled = false;
+  sendBtn.disabled = false;
+  input.focus();
 }
 
-/* Events */
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
+sendBtn.onclick = sendMessage;
+input.onkeydown = e => e.key === "Enter" && sendMessage();
 
-/* Message d’accueil */
 window.onload = () => {
   addMessage("Salut. Je suis Phantom AI. Écris-moi un message.", "ai");
 };

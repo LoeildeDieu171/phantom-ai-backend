@@ -1,65 +1,79 @@
-const chat = document.getElementById("chat");
-const input = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
+const chat = document.getElementById("chat-container");
+const input = document.getElementById("user-input");
+const button = document.getElementById("send-btn");
 
 let aiBusy = false;
 
-function addMessage(text, type) {
-  const div = document.createElement("div");
-  div.className = `message ${type}`;
-  div.textContent = text;
-  chat.appendChild(div);
+function addMessage(text, sender) {
+  const msg = document.createElement("div");
+  msg.className = `message ${sender}`;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  msg.appendChild(bubble);
+
+  chat.appendChild(msg);
   chat.scrollTop = chat.scrollHeight;
-  return div;
+
+  if (sender === "ai") {
+    typeText(bubble, text);
+  } else {
+    bubble.textContent = text;
+  }
 }
 
-function typeText(el, text, speed = 18) {
-  el.textContent = "";
+function typeText(element, text) {
   let i = 0;
-  const interval = setInterval(() => {
-    el.textContent += text[i];
-    i++;
-    chat.scrollTop = chat.scrollHeight;
-    if (i >= text.length) clearInterval(interval);
-  }, speed);
-}
-
-async function sendMessage() {
-  const text = input.value.trim();
-  if (!text || aiBusy) return;
-
   aiBusy = true;
-  input.value = "";
-  input.disabled = true;
-  sendBtn.disabled = true;
+  button.disabled = true;
 
-  addMessage(text, "user");
-  const aiBubble = addMessage("⏳ Phantom AI réfléchit…", "ai");
-
-  try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await res.json();
-    aiBubble.textContent = "";
-    typeText(aiBubble, data.response || "Erreur IA");
-
-  } catch (err) {
-    aiBubble.textContent = "Erreur serveur.";
+  function typing() {
+    if (i < text.length) {
+      element.textContent += text.charAt(i);
+      i++;
+      chat.scrollTop = chat.scrollHeight;
+      setTimeout(typing, 18); // vitesse type ChatGPT
+    } else {
+      aiBusy = false;
+      button.disabled = false;
+    }
   }
 
-  aiBusy = false;
-  input.disabled = false;
-  sendBtn.disabled = false;
-  input.focus();
+  typing();
 }
 
-sendBtn.onclick = sendMessage;
-input.onkeydown = e => e.key === "Enter" && sendMessage();
+function fakeAIResponse(userText) {
+  const responses = [
+    "Bonne question. Laisse-moi t’expliquer ça clairement.",
+    "Voici comment je vois les choses.",
+    "Intéressant. Allons droit au but.",
+    "D’accord. Voici une réponse détaillée.",
+    "Je comprends ce que tu veux faire."
+  ];
 
-window.onload = () => {
-  addMessage("Salut. Je suis Phantom AI. Écris-moi un message.", "ai");
-};
+  const base = responses[Math.floor(Math.random() * responses.length)];
+  return `${base}\n\nTu as écrit : "${userText}"\n\n(On branchera une vraie IA juste après.)`;
+}
+
+button.addEventListener("click", send);
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+
+function send() {
+  if (aiBusy) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, "user");
+  input.value = "";
+
+  setTimeout(() => {
+    const reply = fakeAIResponse(text);
+    addMessage(reply, "ai");
+  }, 400);
+}

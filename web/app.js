@@ -2,78 +2,66 @@ const chat = document.getElementById("chat-container");
 const input = document.getElementById("user-input");
 const button = document.getElementById("send-btn");
 
-let aiBusy = false;
+let history = [
+  { role: "system", content: "Tu es Phantom AI, une IA intelligente, claire et utile." }
+];
 
-function addMessage(text, sender) {
+function addMessage(role, text = "") {
   const msg = document.createElement("div");
-  msg.className = `message ${sender}`;
+  msg.className = `message ${role}`;
 
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  msg.appendChild(bubble);
+  bubble.textContent = text;
 
+  msg.appendChild(bubble);
   chat.appendChild(msg);
   chat.scrollTop = chat.scrollHeight;
 
-  if (sender === "ai") {
-    typeText(bubble, text);
-  } else {
-    bubble.textContent = text;
-  }
+  return bubble;
 }
 
-function typeText(element, text) {
-  let i = 0;
-  aiBusy = true;
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = "";
   button.disabled = true;
 
-  function typing() {
-    if (i < text.length) {
-      element.textContent += text.charAt(i);
-      i++;
-      chat.scrollTop = chat.scrollHeight;
-      setTimeout(typing, 18); // vitesse type ChatGPT
-    } else {
-      aiBusy = false;
-      button.disabled = false;
-    }
+  addMessage("user", text);
+  history.push({ role: "user", content: text });
+
+  const bubble = addMessage("ai", "");
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: history })
+  });
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let full = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    full += chunk;
+    bubble.textContent += chunk;
+    chat.scrollTop = chat.scrollHeight;
   }
 
-  typing();
+  history.push({ role: "assistant", content: full });
+  button.disabled = false;
 }
 
-function fakeAIResponse(userText) {
-  const responses = [
-    "Bonne question. Laisse-moi t’expliquer ça clairement.",
-    "Voici comment je vois les choses.",
-    "Intéressant. Allons droit au but.",
-    "D’accord. Voici une réponse détaillée.",
-    "Je comprends ce que tu veux faire."
-  ];
+button.onclick = send;
 
-  const base = responses[Math.floor(Math.random() * responses.length)];
-  return `${base}\n\nTu as écrit : "${userText}"\n\n(On branchera une vraie IA juste après.)`;
-}
-
-button.addEventListener("click", send);
-input.addEventListener("keydown", (e) => {
+input.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     send();
   }
 });
-
-function send() {
-  if (aiBusy) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  addMessage(text, "user");
-  input.value = "";
-
-  setTimeout(() => {
-    const reply = fakeAIResponse(text);
-    addMessage(reply, "ai");
-  }, 400);
-}

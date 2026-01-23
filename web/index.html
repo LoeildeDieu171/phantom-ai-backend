@@ -3,21 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <title>Phantom AI</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <header>🤖 Phantom AI</header>
 
-    <main id="chat"></main>
+<header class="topbar">
+  <span class="title">Phantom AI</span>
+</header>
 
-    <footer>
-      <input id="input" placeholder="Écris ton message..." />
-      <button id="send">Envoyer</button>
-    </footer>
-  </div>
+<main id="chat-container">
+  <div id="chat"></div>
+</main>
 
-  <script src="app.js"></script>
+<footer class="input-area">
+  <input
+    id="messageInput"
+    type="text"
+    placeholder="Écris ton message..."
+    autocomplete="off"
+  />
+  <button id="sendBtn">Envoyer</button>
+</footer>
+
+<script src="app.js"></script>
 </body>
 </html>

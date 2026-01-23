@@ -1,20 +1,26 @@
 import os
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from ai.openai_client import stream_chat
-from security.validation import validate_message
+from pydantic import BaseModel
+import openai
+
+# ---------- CONFIG ----------
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ---------- MODELS ----------
+class ChatRequest(BaseModel):
+    message: str
+
+# ---------- ROUTES ----------
 @app.get("/api/health")
 def health():
     return {
@@ -24,14 +30,30 @@ def health():
     }
 
 @app.post("/api/chat")
-async def chat(request: Request):
-    body = await request.json()
-    message = body.get("message", "")
+async def chat(req: ChatRequest):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Tu es Phantom AI, une IA intelligente, concise et naturelle."
+                },
+                {
+                    "role": "user",
+                    "content": req.message
+                }
+            ],
+            temperature=0.8,
+            max_tokens=300
+        )
 
-    validate_message(message)
+        return {
+            "response": response.choices[0].message.content
+        }
 
-    def generator():
-        for chunk in stream_chat(message):
-            yield chunk
-
-    return StreamingResponse(generator(), media_type="text/plain")
+    except Exception as e:
+        return {
+            "error": "Erreur serveur",
+            "details": str(e)
+        }
